@@ -166,15 +166,26 @@ export const verifyEmail=async(req, res)=>{
 
 }
 
-export const isAuthenticated=async(req,res)=>{
-
-    try{
-        return res.json({success:true});
-    }catch(error){
-        return res.json({success:false, message:error.message});
+export const isAuthenticated = async (req, res) => {
+    try {
+      const token = req.cookies.token;
+  
+      if (!token) {
+        return res.json({ success: false, message: 'Not logged in' });
+      }
+  
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await user.findById(decoded.id).select('-password');
+  
+      if (!user) {
+        return res.json({ success: false, message: 'User not found' });
+      }
+  
+      return res.json({ success: true, userData: user });
+    } catch (error) {
+      return res.json({ success: false, message: error.message });
     }
-
-}
+  };
 
 export const sendResetOtp = async(req,res)=>{
     const {email} = req.body;
